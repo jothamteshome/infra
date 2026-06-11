@@ -54,8 +54,18 @@ def extract_queried_hostname(log_message: str) -> str | None:
     parts = log_message.strip().split()
     if len(parts) < 5:
         return None
-    hostname = parts[3].rstrip(".")
-    return hostname.lower()
+    
+    hostname = parts[3].rstrip(".").lower()
+    record_type = parts[4].upper()
+
+    if record_type != "SRV":
+        return None
+    
+    SRV_PREFIX = "_minecraft._tcp."
+    if not hostname.startswith(SRV_PREFIX):
+        return None
+
+    return hostname.lower().removeprefix(SRV_PREFIX)
 
 
 def start_instance_if_needed(instance_id: str, region: str, hostname: str) -> None:
