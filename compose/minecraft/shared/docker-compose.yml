@@ -1,0 +1,35 @@
+name: minecraft-server
+
+services:
+  minecraft:
+    image: itzg/minecraft-server:latest
+    pull_policy: weekly
+    env_file: .env.mc
+    container_name: minecraft
+    restart: unless-stopped
+    tty: true
+    stdin_open: true
+    environment:
+      RCON_PASSWORD: ${RCON_PASSWORD}
+    ports:
+      - "25565:25565"
+    volumes:
+      - /opt/minecraft/server:/data
+
+  backup:
+    image: itzg/mc-backup:latest
+    pull_policy: weekly
+    env_file: .env.mc
+    container_name: minecraft-backup
+    restart: unless-stopped
+    environment:
+      RCON_PASSWORD: ${RCON_PASSWORD}
+      POST_BACKUP_SCRIPT_FILE: /scripts/post-backup.sh
+    volumes:
+      - /opt/minecraft/server:/data:ro
+      - /opt/minecraft/backups:/backups
+      - ./rclone.conf:/config/rclone/rclone.conf:ro
+      - ./scripts/post-backup.sh:/scripts/post-backup.sh:ro
+    depends_on:
+      minecraft:
+        condition: service_healthy
