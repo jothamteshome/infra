@@ -13,7 +13,7 @@ DEST="aws:$BACKUP_S3_BUCKET/vanilla/$LEVEL/$DATE.tgz"
 echo "[post-backup] Uploading $LATEST to $DEST"
 
 if rclone copyto "$LATEST" "$DEST" \
-    --s3-no-head \
+    --s3-no-head-object \
     --metadata-set "minecraft-version=$VERSION" \
     --metadata-set "level=$LEVEL"; then
     echo "[post-backup] Upload complete"
