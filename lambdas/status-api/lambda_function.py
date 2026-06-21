@@ -25,19 +25,26 @@ async def main(event: dict) -> dict:
     if event.get("requestContext", {}).get("http", {}).get("method") == "OPTIONS":
         return {"statusCode": 204, "headers": cors_headers, "body": ""}
 
-    minecraft, checked, containers = await asyncio.gather(
-        check_all_minecraft_servers(),
-        check_all_sites(),
-        get_container_stats(),
-    )
+    try:
+        minecraft, checked, containers = await asyncio.gather(
+            check_all_minecraft_servers(),
+            check_all_sites(),
+            get_container_stats(),
+        )
 
-    body = {
-        "minecraft":   minecraft,
-        "sites":       checked["sites"],
-        "apis":        checked["apis"],
-        "containers":  containers,
-        "checked_at":  int(time.time()),
-    }
+        body = {
+            "minecraft":   minecraft,
+            "sites":       checked["sites"],
+            "apis":        checked["apis"],
+            "containers":  containers,
+            "checked_at":  int(time.time()),
+        }
+    except Exception as e:
+        return {
+            "statusCode": 500,
+            "headers": cors_headers,
+            "body": json.dumps({"error": str(e)}),
+        }
 
     return {
         "statusCode": 200,

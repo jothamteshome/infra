@@ -31,4 +31,4 @@ async def check_all_minecraft_servers() -> dict:
         check_minecraft_server(hostname, port)
         for hostname, port in MINECRAFT_SERVERS
     ])
-    return dict(zip([h for h, _, _ in MINECRAFT_SERVERS], results))
+    return dict(zip([h for h, _ in MINECRAFT_SERVERS], results))
