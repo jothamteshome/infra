@@ -12,12 +12,15 @@
 # so it can be triggered either by the GitHub Actions deploy workflow
 # (when the instance is running) or manually via SSH (anytime,
 # including after the instance was stopped when the workflow couldn't
-# reach it).
+# reach it). Also runs on every boot via the minecraft-setup systemd
+# service, which is what keeps the Route53 A record correct regardless
+# of *why* the instance booted (Lambda trigger, manual start, AWS
+# maintenance reboot, etc) — DNS truth lives with the instance, not
+# with whatever triggered the boot.
 #
 # Instance profile needs:
-#   ssm:GetParameter, ec2:StopInstances, ec2:DescribeAddresses,
-#   ec2:DisassociateAddress, ec2:ReleaseAddresses,
-#   route53:ChangeResourceRecordSets, s3:PutObject (for backups)
+#   ssm:GetParameter, ec2:StopInstances,
+#   route53:ChangeResourceRecordSets, s3:PutObject/ListBucket (for backups)
 
 set -euo pipefail
 
@@ -26,7 +29,8 @@ set -euo pipefail
 # which /minecraft/<server-type>/... SSM params to fetch.
 #
 # Required on first run, persisted to /etc/environment afterward so
-# subsequent runs (deploy workflow, manual SSH) don't need to pass it.
+# subsequent runs (deploy workflow, manual SSH, every-boot systemd
+# service) don't need to pass it.
 if [ -n "${1:-}" ]; then
     SERVER_TYPE="$1"
     if ! grep -q "^SERVER_TYPE=" /etc/environment 2>/dev/null; then
@@ -45,6 +49,15 @@ SERVER_DIR="$INFRA_DIR/compose/minecraft/$SERVER_TYPE"
 AWS_REGION="us-east-2"
 
 log() { echo "[setup-instance] $*"; }
+
+get_param() {
+    aws ssm get-parameter \
+        --region "$AWS_REGION" \
+        --name "$1" \
+        --with-decryption \
+        --query Parameter.Value \
+        --output text
+}
 
 # ---------------------------------------------------------------
 # 1. Self-update — pull latest from repo
@@ -151,7 +164,44 @@ EOF
 chmod +x /etc/profile.d/init-env.sh
 
 # ---------------------------------------------------------------
-# 8. Systemd — idle-shutdown service
+# 8. Self-register public IP with Route53
+#    Runs on EVERY boot, regardless of why the instance started
+#    (Lambda trigger, manual start, AWS maintenance reboot). This
+#    is what replaced the Lambda's old EIP-allocation responsibility
+#    — DNS truth now lives with the instance itself, not with
+#    whatever triggered the boot. Uses IMDSv2 (token required).
+# ---------------------------------------------------------------
+log "=== Registering public IP with Route53 ==="
+source /etc/profile.d/init-env.sh
+
+TOKEN=$(curl -s -X PUT "http://169.254.169.254/latest/api/token" \
+    -H "X-aws-ec2-metadata-token-ttl-seconds: 60")
+PUBLIC_IP=$(curl -s -H "X-aws-ec2-metadata-token: $TOKEN" \
+    http://169.254.169.254/latest/meta-data/public-ipv4)
+
+if [ -z "$PUBLIC_IP" ]; then
+    log "WARNING: could not determine public IP — skipping Route53 update"
+else
+    log "Public IP: $PUBLIC_IP — updating $MC_HOSTNAME"
+    aws route53 change-resource-record-sets \
+        --region us-east-1 \
+        --hosted-zone-id "$HOSTED_ZONE_ID" \
+        --change-batch "{
+            \"Changes\": [{
+                \"Action\": \"UPSERT\",
+                \"ResourceRecordSet\": {
+                    \"Name\": \"$MC_HOSTNAME\",
+                    \"Type\": \"A\",
+                    \"TTL\": 60,
+                    \"ResourceRecords\": [{\"Value\": \"$PUBLIC_IP\"}]
+                }
+            }]
+        }"
+    log "Route53 updated: $MC_HOSTNAME -> $PUBLIC_IP"
+fi
+
+# ---------------------------------------------------------------
+# 9. Systemd — idle-shutdown service
 #    Containers use `restart: unless-stopped` and survive reboots
 #    with their last-applied env baked in by Docker — no boot-time
 #    compose service required.
@@ -174,13 +224,13 @@ WantedBy=multi-user.target
 EOF
 
 # ---------------------------------------------------------------
-# 9. Systemd — minecraft-setup service (runs this script on every boot)
-#    Refreshes git checkout, SSM-backed init-env.sh, and idle-shutdown
-#    service config on every start. Does NOT touch containers —
-#    restart: unless-stopped already brought them up with last-known
-#    config independently, so a failure here doesn't affect the
-#    running server. Apply new container config manually via
-#    `docker compose up -d` after this runs.
+# 10. Systemd — minecraft-setup service (runs this script on every boot)
+#     Refreshes git checkout, SSM-backed init-env.sh, Route53 A record,
+#     and idle-shutdown service config on every start. Does NOT touch
+#     containers — restart: unless-stopped already brought them up
+#     with last-known config independently, so a failure here doesn't
+#     affect the running server. Apply new container config manually
+#     via `docker compose up -d` after this runs.
 # ---------------------------------------------------------------
 log "=== Installing minecraft-setup service ==="
 cat > /etc/systemd/system/minecraft-setup.service << EOF

@@ -1,21 +1,24 @@
 #!/bin/bash
 # idle-shutdown.sh — stops EC2 instance when no players online
 #
-# Reads from EnvironmentFile (/opt/minecraft/idle-shutdown.env):
+# Reads from /etc/profile.d/init-env.sh (sourced by the systemd
+# service before this script runs):
 #   HOSTED_ZONE_ID, MC_HOSTNAME, REGION, SERVER_TYPE
 #
 # Flow on idle threshold:
-#   1. Update Route53 A record to 0.0.0.0 (new connections stop here first)
-#   2. Trigger final backup via mc-backup (RCON is local; S3 upload still
-#      needs the EIP, so this runs BEFORE releasing it)
-#   3. Disassociate and release EIP
-#   4. Stop EC2 instance
+#   1. Update Route53 A record to 0.0.0.0 (new connections stop here
+#      first; the instance's own auto-assigned public IP is released
+#      automatically by AWS when the instance stops — no EIP to
+#      manage, nothing to release manually)
+#   2. Trigger final backup via mc-backup (RCON is local; S3 upload
+#      still needs internet, so this runs BEFORE stopping)
+#   3. Stop EC2 instance
 
 set -euo pipefail
 
-# Fail loudly if setup-instance.sh didn't write idle-shutdown.env correctly,
-# rather than failing silently partway through a shutdown.
-: "${HOSTED_ZONE_ID:?HOSTED_ZONE_ID not set — was idle-shutdown.env written by setup-instance.sh?}"
+# Fail loudly if init-env.sh didn't export these correctly, rather
+# than failing silently partway through a shutdown.
+: "${HOSTED_ZONE_ID:?HOSTED_ZONE_ID not set — was init-env.sh sourced correctly?}"
 : "${MC_HOSTNAME:?MC_HOSTNAME not set}"
 : "${REGION:?REGION not set}"
 
@@ -65,9 +68,8 @@ while true; do
         log "Instance ID: $INSTANCE_ID"
 
         # --- Clear Route53 first ---
-        # Set to 0.0.0.0 immediately so new connection attempts stop here
-        # rather than racing the backup/shutdown process. EIP stays alive
-        # a bit longer so the backup upload (rclone -> S3) still has internet.
+        # Set to 0.0.0.0 immediately so new connection attempts stop
+        # here rather than racing the backup/shutdown process.
         log "Clearing Route53 record for $MC_HOSTNAME..."
         aws route53 change-resource-record-sets \
             --region us-east-1 \
@@ -86,32 +88,15 @@ while true; do
 
         # --- Final backup ---
         # RCON commands (save-all/save-off/save-on) are local over the
-        # Docker network, but the rclone upload to S3 needs the EIP's
-        # internet access — must run before EIP release.
+        # Docker network. rclone upload to S3 needs internet, which is
+        # still available here since the instance hasn't stopped yet.
         log "Triggering final backup..."
         docker exec minecraft-backup backup now || log "Backup failed (non-fatal, startup backup covers this)"
         log "Backup complete"
 
-        # --- Release EIP ---
-        ALLOCATION_ID=$(aws ec2 describe-addresses \
-            --region "$REGION" \
-            --filters "Name=instance-id,Values=$INSTANCE_ID" \
-            --query 'Addresses[0].AllocationId' \
-            --output text 2>/dev/null || echo "None")
-
-        if [ "$ALLOCATION_ID" != "None" ] && [ -n "$ALLOCATION_ID" ]; then
-            log "Releasing EIP: $ALLOCATION_ID"
-            aws ec2 disassociate-address \
-                --region "$REGION" \
-                --allocation-id "$ALLOCATION_ID" || true
-            aws ec2 release-address \
-                --region "$REGION" \
-                --allocation-id "$ALLOCATION_ID" || true
-        else
-            log "No EIP found — skipping release"
-        fi
-
         # --- Stop instance ---
+        # The auto-assigned public IP is released automatically by AWS
+        # when the instance enters 'stopped' state — no manual cleanup.
         log "Stopping instance $INSTANCE_ID"
         aws ec2 stop-instances --region "$REGION" --instance-ids "$INSTANCE_ID"
 
