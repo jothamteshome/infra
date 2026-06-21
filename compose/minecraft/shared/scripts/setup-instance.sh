@@ -69,18 +69,33 @@ git -C "$INFRA_DIR" reset --hard origin/main
 
 # ---------------------------------------------------------------
 # 2. Docker
-# AL2023 has Docker in dnf — includes docker-compose-plugin for
-# Compose v2. AWS CLI is pre-installed, no separate step needed.
+# AL2023's default repo only has plain `docker`, NOT
+# docker-compose-plugin — that package doesn't exist there. Compose
+# v2 has to be installed manually as a CLI plugin binary. Installed
+# system-wide (/usr/local/lib/docker/cli-plugins) so it works for
+# both ec2-user and root (root needs it too, since systemd services
+# run docker compose commands as root).
 # ---------------------------------------------------------------
 log "=== Installing Docker ==="
 if ! command -v docker &>/dev/null; then
-    dnf install -y docker docker-compose-plugin
+    dnf install -y docker
     systemctl enable docker
     systemctl start docker
 else
     log "Docker already installed, skipping"
 fi
 usermod -aG docker ec2-user
+
+log "=== Installing Docker Compose plugin ==="
+if ! docker compose version &>/dev/null; then
+    mkdir -p /usr/local/lib/docker/cli-plugins
+    curl -sL "https://github.com/docker/compose/releases/latest/download/docker-compose-linux-$(uname -m)" \
+        -o /usr/local/lib/docker/cli-plugins/docker-compose
+    chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
+    log "Docker Compose plugin installed: $(docker compose version)"
+else
+    log "Docker Compose plugin already installed, skipping"
+fi
 
 # ---------------------------------------------------------------
 # 3. Swap (2GB — Java heap benefits on 4GB instance)
