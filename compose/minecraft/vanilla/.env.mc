@@ -7,14 +7,14 @@ TYPE=FABRIC
 
 # --- Memory ---
 MEMORY=3G
-USE_MEOWICE_FLAGS=true
+USE_MEOWICE_FLAGS=false
 
 # --- World ---
 LEVEL=whymightacraft_season_001
 SEED=
 
 # --- Mods ---
-MODRINTH_PROJECTS=fabric-api,lithium,krypton,ferrite-core,modernfix,c2me-fabric,scalablelux,spark
+MODRINTH_PROJECTS=fabric-api,lithium,krypton,ferrite-core,scalablelux,spark
 REMOVE_OLD_MODS=true
 MODRINTH_DOWNLOAD_DEPENDENCIES=required
 
@@ -50,7 +50,7 @@ BACKUP_METHOD=tar
 RCON_HOST=minecraft
 EXCLUDES=cache,libraries,versions,logs,*.jar,gc-logs
 
-BACKUP_INTERVAL=0
+BACKUP_INTERVAL=24h
 PRUNE_BACKUPS_DAYS=0
 PRUNE_BACKUPS_COUNT=2
 INITIAL_DELAY=0

@@ -30,6 +30,28 @@ idle_count=0
 
 log() { logger -t minecraft-idle-shutdown "$*"; echo "[idle-shutdown] $*"; }
 
+# Bounded retry — for transient failures (network blip, AWS throttling,
+# brief Docker hiccup), not for waiting on eventual consistency. Each
+# call either succeeds within $1 attempts or gives up and returns
+# failure, so callers can decide whether that's fatal or not.
+retry() {
+    local attempts="$1"; shift
+    local delay="$1"; shift
+    local description="$1"; shift
+
+    for attempt in $(seq 1 "$attempts"); do
+        if "$@"; then
+            return 0
+        fi
+        if [ "$attempt" -lt "$attempts" ]; then
+            log "$description failed (attempt $attempt/$attempts), retrying in ${delay}s..."
+            sleep "$delay"
+        fi
+    done
+    log "$description failed after $attempts attempts"
+    return 1
+}
+
 log "Startup grace period: waiting ${STARTUP_GRACE}s before polling..."
 sleep "$STARTUP_GRACE"
 
@@ -71,28 +93,33 @@ while true; do
         # Set to 0.0.0.0 immediately so new connection attempts stop
         # here rather than racing the backup/shutdown process.
         log "Clearing Route53 record for $MC_HOSTNAME..."
-        aws route53 change-resource-record-sets \
-            --region us-east-1 \
-            --hosted-zone-id "$HOSTED_ZONE_ID" \
-            --change-batch "{
-                \"Changes\": [{
-                    \"Action\": \"UPSERT\",
-                    \"ResourceRecordSet\": {
-                        \"Name\": \"$MC_HOSTNAME\",
-                        \"Type\": \"A\",
-                        \"TTL\": 60,
-                        \"ResourceRecords\": [{\"Value\": \"0.0.0.0\"}]
-                    }
-                }]
-            }" || log "Route53 update failed (non-fatal)"
+        clear_route53() {
+            aws route53 change-resource-record-sets \
+                --region us-east-1 \
+                --hosted-zone-id "$HOSTED_ZONE_ID" \
+                --change-batch "{
+                    \"Changes\": [{
+                        \"Action\": \"UPSERT\",
+                        \"ResourceRecordSet\": {
+                            \"Name\": \"$MC_HOSTNAME\",
+                            \"Type\": \"A\",
+                            \"TTL\": 60,
+                            \"ResourceRecords\": [{\"Value\": \"0.0.0.0\"}]
+                        }
+                    }]
+                }"
+        }
+        retry 3 5 "Route53 clear" clear_route53 || log "Proceeding with shutdown despite Route53 failure"
 
         # --- Final backup ---
         # RCON commands (save-all/save-off/save-on) are local over the
         # Docker network. rclone upload to S3 needs internet, which is
         # still available here since the instance hasn't stopped yet.
         log "Triggering final backup..."
-        docker exec minecraft-backup backup now || log "Backup failed (non-fatal, startup backup covers this)"
-        log "Backup complete"
+        trigger_backup() {
+            docker exec minecraft-backup backup now
+        }
+        retry 3 10 "Backup" trigger_backup || log "Proceeding with shutdown despite backup failure (startup backup covers next session)"
 
         # --- Stop instance ---
         # The auto-assigned public IP is released automatically by AWS

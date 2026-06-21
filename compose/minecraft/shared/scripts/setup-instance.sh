@@ -59,13 +59,48 @@ get_param() {
         --output text
 }
 
+# Bounded retry — for transient failures (network blip, AWS throttling),
+# not for waiting on eventual consistency.
+retry() {
+    local attempts="$1"; shift
+    local delay="$1"; shift
+    local description="$1"; shift
+
+    for attempt in $(seq 1 "$attempts"); do
+        if "$@"; then
+            return 0
+        fi
+        if [ "$attempt" -lt "$attempts" ]; then
+            log "$description failed (attempt $attempt/$attempts), retrying in ${delay}s..."
+            sleep "$delay"
+        fi
+    done
+    log "$description failed after $attempts attempts"
+    return 1
+}
+
 # ---------------------------------------------------------------
 # 1. Self-update — pull latest from repo
 # ---------------------------------------------------------------
 log "=== Pulling latest from repo ==="
 git config --system --add safe.directory "$INFRA_DIR"
+
+BEFORE_SHA=$(git -C "$INFRA_DIR" rev-parse HEAD)
 git -C "$INFRA_DIR" fetch origin main
 git -C "$INFRA_DIR" reset --hard origin/main
+AFTER_SHA=$(git -C "$INFRA_DIR" rev-parse HEAD)
+
+# CRITICAL: if this script's own file just changed on disk, bash is
+# still reading from its original buffered copy of the OLD file —
+# it does NOT reload mid-execution. Continuing past this point would
+# run a mix of old/new code depending on byte offsets, which is unsafe
+# and has caused real failures (stale logic executing after a fix was
+# already pulled). Re-exec fresh from disk so everything after this
+# line is guaranteed to come from the file that's actually there now.
+if [ "$BEFORE_SHA" != "$AFTER_SHA" ]; then
+    log "Repo updated ($BEFORE_SHA -> $AFTER_SHA) — re-executing fresh copy of this script"
+    exec bash "$SHARED_DIR/scripts/setup-instance.sh" "$SERVER_TYPE"
+fi
 
 # ---------------------------------------------------------------
 # 2. Docker
@@ -198,21 +233,27 @@ if [ -z "$PUBLIC_IP" ]; then
     log "WARNING: could not determine public IP — skipping Route53 update"
 else
     log "Public IP: $PUBLIC_IP — updating $MC_HOSTNAME"
-    aws route53 change-resource-record-sets \
-        --region us-east-1 \
-        --hosted-zone-id "$HOSTED_ZONE_ID" \
-        --change-batch "{
-            \"Changes\": [{
-                \"Action\": \"UPSERT\",
-                \"ResourceRecordSet\": {
-                    \"Name\": \"$MC_HOSTNAME\",
-                    \"Type\": \"A\",
-                    \"TTL\": 60,
-                    \"ResourceRecords\": [{\"Value\": \"$PUBLIC_IP\"}]
-                }
-            }]
-        }"
-    log "Route53 updated: $MC_HOSTNAME -> $PUBLIC_IP"
+    register_route53() {
+        aws route53 change-resource-record-sets \
+            --region us-east-1 \
+            --hosted-zone-id "$HOSTED_ZONE_ID" \
+            --change-batch "{
+                \"Changes\": [{
+                    \"Action\": \"UPSERT\",
+                    \"ResourceRecordSet\": {
+                        \"Name\": \"$MC_HOSTNAME\",
+                        \"Type\": \"A\",
+                        \"TTL\": 60,
+                        \"ResourceRecords\": [{\"Value\": \"$PUBLIC_IP\"}]
+                    }
+                }]
+            }"
+    }
+    if retry 3 5 "Route53 registration" register_route53; then
+        log "Route53 updated: $MC_HOSTNAME -> $PUBLIC_IP"
+    else
+        log "WARNING: Route53 registration failed after retries — DNS may be stale until next boot/run"
+    fi
 fi
 
 # ---------------------------------------------------------------

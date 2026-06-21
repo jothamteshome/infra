@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-LATEST=$(ls -t /backups/*.tgz 2>/dev/null | head -1)
+LATEST=$(ls -t /backups/*.tar.gz 2>/dev/null | head -1)
 if [ -z "$LATEST" ]; then
   echo "No backup file found, skipping S3 upload"
   exit 0
