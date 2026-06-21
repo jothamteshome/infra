@@ -1,0 +1,65 @@
+name: Update Minecraft SSM Parameters (reusable)
+
+on:
+  workflow_call:
+    inputs:
+      server-type:
+        required: true
+        type: string
+      hostname:
+        required: true
+        type: string
+    secrets:
+      AWS_MINECRAFT_ROLE_TO_ASSUME:
+        required: true
+      RCON_PASSWORD:
+        required: true
+      BACKUP_S3_BUCKET:
+        required: true
+      HOSTED_ZONE_ID:
+        required: true
+
+jobs:
+  update-ssm:
+    name: Update SSM Parameters (${{ inputs.server-type }})
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ secrets.AWS_MINECRAFT_ROLE_TO_ASSUME }}
+          aws-region: us-east-2
+
+      - name: Update SSM parameters
+        run: |
+          aws ssm put-parameter \
+            --name "/minecraft/${{ inputs.server-type }}/rcon-password" \
+            --value "${{ secrets.RCON_PASSWORD }}" \
+            --type SecureString --overwrite
+
+          aws ssm put-parameter \
+            --name "/minecraft/${{ inputs.server-type }}/backup-s3-bucket" \
+            --value "${{ secrets.BACKUP_S3_BUCKET }}" \
+            --type String --overwrite
+
+          aws ssm put-parameter \
+            --name "/minecraft/${{ inputs.server-type }}/hosted-zone-id" \
+            --value "${{ secrets.HOSTED_ZONE_ID }}" \
+            --type String --overwrite
+
+          aws ssm put-parameter \
+            --name "/minecraft/${{ inputs.server-type }}/hostname" \
+            --value "${{ inputs.hostname }}" \
+            --type String --overwrite
+
+      - name: Done
+        run: |
+          echo "SSM parameters updated for ${{ inputs.server-type }}."
+          echo "Changes apply automatically next time the instance boots"
+          echo "(minecraft-setup.service refreshes init-env.sh on every boot),"
+          echo "or immediately if you SSH in and re-source it manually:"
+          echo "  source /etc/profile.d/init-env.sh && docker compose up -d"

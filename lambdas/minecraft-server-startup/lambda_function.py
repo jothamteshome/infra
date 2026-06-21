@@ -11,7 +11,7 @@ logger.setLevel(logging.INFO)
 # Add new servers here — no other code changes needed.
 SERVER_MAP = {
     "vanilla.mc.whymighta.net": {
-        "instance_id": "i-0abdfe83371e2ea24",
+        "instance_id": "i-0d3dbe15ebefafdca",
         "region": "us-east-2",
         "hosted_zone_id": "Z04285551JOMKVII7XNDL",
     },
