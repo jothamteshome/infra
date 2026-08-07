@@ -10,8 +10,8 @@ MEMORY=3G
 USE_MEOWICE_FLAGS=false
 
 # --- World ---
-LEVEL=whymightacraft_season_001
-SEED=
+LEVEL=whymightacraft_season_001_v2
+SEED=1180506052330500839
 
 # --- Mods ---
 MODRINTH_PROJECTS=fabric-api,lithium,krypton,ferrite-core,scalablelux,spark
