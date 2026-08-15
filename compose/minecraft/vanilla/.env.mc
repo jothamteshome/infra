@@ -19,7 +19,7 @@ SEED=
 # ScalableLux dropped - no 1.21.1 Fabric build
 # fast-path dropped - abandoned at 1.16
 # RPG Series deps pulled automatically via MODRINTH_DOWNLOAD_DEPENDENCIES=required
-MODRINTH_PROJECTS=fabric-api,lithium,krypton,ferrite-core,spark,wizards,archers,paladins-and-priests,rogues-and-warriors,jewelry,relics-rpg,arsenal-rpg-series,dynamic-torches,explorify,hearths,nice-mobs-remastered,vanilla-refresh,true-ending,dungeons-and-taverns,netherweather,neoenchant,tool-trims,infinity-cave:beta
+MODRINTH_PROJECTS=fabric-api,lithium,krypton,ferrite-core,spark,wizards,archers,paladins-and-priests,rogues-and-warriors,jewelry,relics-rpg,arsenal-rpg-series,dynamic-torches,explorify,hearths,nice-mobs-remastered,vanilla-refresh,true-ending,dungeons-and-taverns,netherweather,neoenchant,tool-trims,infinity-cave:beta,playeranimator
 REMOVE_OLD_MODS=true
 MODRINTH_DOWNLOAD_DEPENDENCIES=required
 
