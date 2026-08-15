@@ -1,6 +1,6 @@
 ## Minecraft Server Container
 # --- Server type + version ---
-VERSION=26.1.2
+VERSION=1.21.1
 FABRIC_LOADER_VERSION=0.19.3
 EULA=TRUE
 TYPE=FABRIC
@@ -10,11 +10,16 @@ MEMORY=3G
 USE_MEOWICE_FLAGS=false
 
 # --- World ---
-LEVEL=whymightacraft_season_001_v2
-SEED=1180506052330500839
+LEVEL=moddedcraft_season_001
+SEED=
 
-# --- Mods ---
-MODRINTH_PROJECTS=fabric-api,lithium,krypton,ferrite-core,scalablelux,spark
+# --- Mods + Datapacks (all via MODRINTH_PROJECTS) ---
+# DATAPACKS var dropped - it doesn't support modrinth: slugs, only direct zip URLs
+# Modrinth datapacks go in MODRINTH_PROJECTS alongside mods - itzg handles them correctly
+# ScalableLux dropped - no 1.21.1 Fabric build
+# fast-path dropped - abandoned at 1.16
+# RPG Series deps pulled automatically via MODRINTH_DOWNLOAD_DEPENDENCIES=required
+MODRINTH_PROJECTS=fabric-api,lithium,krypton,ferrite-core,spark,wizards,archers,paladins-and-priests,rogues-and-warriors,jewelry,relics-rpg,arsenal-rpg-series,dynamic-torches,explorify,hearths,nice-mobs-remastered,vanilla-refresh,true-ending,dungeons-and-taverns,netherweather,neoenchant,tool-trims,infinity-cave
 REMOVE_OLD_MODS=true
 MODRINTH_DOWNLOAD_DEPENDENCIES=required
 
