@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'lambdas/minecraft-server-startup/**'
+  workflow_dispatch:
 
 jobs:
   deploy:

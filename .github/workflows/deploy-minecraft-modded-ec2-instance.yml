@@ -9,6 +9,7 @@ on:
       - 'compose/minecraft/modded/**'
       - '.github/workflows/update-minecraft-ssm-parameters.yml'
       - '.github/workflows/deploy-minecraft-modded-ec2-instance.yml'
+  workflow_dispatch:
 
 jobs:
   deploy:

@@ -7,6 +7,7 @@ on:
     paths:
       - 'compose/perpetual-app-host/**'
       - '.github/workflows/deploy-perpetual-app-host.yml'
+  workflow_dispatch:
 
 permissions:
   id-token: write

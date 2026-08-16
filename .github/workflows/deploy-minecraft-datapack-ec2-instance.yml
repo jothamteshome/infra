@@ -9,6 +9,7 @@ on:
       - 'compose/minecraft/datapack/**'
       - '.github/workflows/update-minecraft-ssm-parameters.yml'
       - '.github/workflows/deploy-minecraft-datapack-ec2-instance.yml'
+  workflow_dispatch:
 
 jobs:
   deploy:
