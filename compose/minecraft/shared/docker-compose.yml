@@ -2,7 +2,7 @@ name: minecraft-server
 
 services:
   minecraft:
-    image: itzg/minecraft-server:latest
+    image: itzg/minecraft-server:${JAVA_VERSION:-latest}
     pull_policy: weekly
     env_file: .env.mc
     container_name: minecraft

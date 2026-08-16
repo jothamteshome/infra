@@ -1,3 +1,5 @@
+JAVA_VERSION=latest
+
 ## Minecraft Server Container
 # --- Server type + version ---
 VERSION=26.1.2

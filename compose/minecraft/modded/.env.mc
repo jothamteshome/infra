@@ -1,3 +1,5 @@
+JAVA_VERSION=java17
+
 ## Minecraft Server Container
 # --- Server type + version ---
 VERSION=1.20.1
