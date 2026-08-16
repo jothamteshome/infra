@@ -19,6 +19,7 @@ jobs:
     with:
       server-type: modded
       hostname: modded.mc.whymighta.net
+      java-version: ${{ vars.MINECRAFT_MODDED_JAVA_VERSION }}
     secrets:
       AWS_MINECRAFT_ROLE_TO_ASSUME: ${{ secrets.AWS_MINECRAFT_ROLE_TO_ASSUME }}
       RCON_PASSWORD: ${{ secrets.MINECRAFT_MODDED_RCON_PASSWORD }}

@@ -209,6 +209,11 @@ export MC_HOSTNAME=\$(aws ssm get-parameter \\
     --query Parameter.Value \\
     --output text --region $AWS_REGION 2>/dev/null)
 
+export JAVA_VERSION=\$(aws ssm get-parameter \\
+    --name "/minecraft/$SERVER_TYPE/java-version" \\
+    --query Parameter.Value \\
+    --output text --region $AWS_REGION 2>/dev/null || echo "")
+
 echo "Minecraft environment loaded!"
 EOF
 chmod +x /etc/profile.d/init-env.sh

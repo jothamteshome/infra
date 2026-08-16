@@ -9,6 +9,10 @@ on:
       hostname:
         required: true
         type: string
+      java-version:
+        required: false
+        type: string
+        default: ''
     secrets:
       AWS_MINECRAFT_ROLE_TO_ASSUME:
         required: true
@@ -55,6 +59,13 @@ jobs:
             --name "/minecraft/${{ inputs.server-type }}/hostname" \
             --value "${{ inputs.hostname }}" \
             --type String --overwrite
+
+          if [ -n "${{ inputs.java-version }}" ]; then
+            aws ssm put-parameter \
+              --name "/minecraft/${{ inputs.server-type }}/java-version" \
+              --value "${{ inputs.java-version }}" \
+              --type String --overwrite
+          fi
 
       - name: Done
         run: |
