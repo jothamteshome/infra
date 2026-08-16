@@ -36,7 +36,7 @@ jobs:
       - name: Checkout Infra repo
         uses: actions/checkout@v6
         with:
-          repository: jothamteshome/infra-hub
+          repository: jothamteshome/infra
           path: infra
 
       - name: Format repository name correctly

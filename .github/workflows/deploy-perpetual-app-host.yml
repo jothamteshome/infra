@@ -39,11 +39,11 @@ jobs:
           --instance-ids ${{ secrets.EC2_INSTANCE_ID }} \
           --document-name "AWS-RunShellScript" \
           --parameters '{"commands":[
-            "git config --system --add safe.directory /opt/infra-hub",
-            "git -C /opt/infra-hub fetch origin main",
-            "git -C /opt/infra-hub reset --hard origin/main",
-            "bash /opt/infra-hub/compose/perpetual-app-host/scripts/setup-instance.sh",
-            "bash -c \". /etc/profile.d/init-env.sh && cd /opt/infra-hub/compose/perpetual-app-host && docker compose up -d && docker image prune -f\""
+            "git config --system --add safe.directory /opt/infra",
+            "git -C /opt/infra fetch origin main",
+            "git -C /opt/infra reset --hard origin/main",
+            "bash /opt/infra/compose/perpetual-app-host/scripts/setup-instance.sh",
+            "bash -c \". /etc/profile.d/init-env.sh && cd /opt/infra/compose/perpetual-app-host && docker compose up -d && docker image prune -f\""
           ]}' \
           --comment "Deploy perpetual-app-host infra" \
           --query "Command.CommandId" \

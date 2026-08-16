@@ -43,7 +43,7 @@ else
     exit 1
 fi
 
-INFRA_DIR="/opt/infra-hub"
+INFRA_DIR="/opt/infra"
 SHARED_DIR="$INFRA_DIR/compose/minecraft/shared"
 SERVER_DIR="$INFRA_DIR/compose/minecraft/$SERVER_TYPE"
 AWS_REGION="us-east-2"
