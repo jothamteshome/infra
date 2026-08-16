@@ -14,10 +14,10 @@ SERVER_MAP = {
         "instance_id": "i-0d3dbe15ebefafdca",
         "region": "us-east-2",
     },
-    # "modded.mc.whymighta.net": {
-    #     "instance_id": "i-ANOTHER_INSTANCE_ID",
-    #     "region": "us-east-2",
-    # },
+    "modded.mc.whymighta.net": {
+        "instance_id": "i-0e15703301b836de9",
+        "region": "us-east-2",
+    },
 }
 
 # States where we can call start_instances

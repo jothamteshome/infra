@@ -3,6 +3,7 @@ from mcstatus import JavaServer
 
 MINECRAFT_SERVERS = [
     ("vanilla.mc.whymighta.net", "25565"),
+    ("modded.mc.whymighta.net", "25565"),
 ]
 
 STATUS_TIMEOUT = 3

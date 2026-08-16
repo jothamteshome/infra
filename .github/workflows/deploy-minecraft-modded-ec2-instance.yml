@@ -1,4 +1,4 @@
-name: Deploy Minecraft Vanilla EC2 Instance
+name: Deploy Minecraft Modded EC2 Instance
 
 on:
   push:
@@ -6,9 +6,9 @@ on:
       - main
     paths:
       - 'compose/minecraft/shared/**'
-      - 'compose/minecraft/vanilla/**'
+      - 'compose/minecraft/modded/**'
       - '.github/workflows/update-minecraft-ssm-parameters.yml'
-      - '.github/workflows/deploy-minecraft-vanilla-ec2-instance.yml'
+      - '.github/workflows/deploy-minecraft-modded-ec2-instance.yml'
 
 jobs:
   deploy:
@@ -17,10 +17,10 @@ jobs:
       contents: read
     uses: ./.github/workflows/update-minecraft-ssm-parameters.yml
     with:
-      server-type: vanilla
-      hostname: vanilla.mc.whymighta.net
+      server-type: modded
+      hostname: modded.mc.whymighta.net
     secrets:
       AWS_MINECRAFT_ROLE_TO_ASSUME: ${{ secrets.AWS_MINECRAFT_ROLE_TO_ASSUME }}
-      RCON_PASSWORD: ${{ secrets.MINECRAFT_VANILLA_RCON_PASSWORD }}
+      RCON_PASSWORD: ${{ secrets.MINECRAFT_MODDED_RCON_PASSWORD }}
       BACKUP_S3_BUCKET: ${{ vars.MINECRAFT_BACKUP_S3_BUCKET }}
       HOSTED_ZONE_ID: ${{ vars.MINECRAFT_HOSTED_ZONE_ID }}

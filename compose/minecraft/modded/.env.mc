@@ -1,29 +1,25 @@
 ## Minecraft Server Container
 # --- Server type + version ---
-VERSION=26.1.2
-FABRIC_LOADER_VERSION=0.19.3
+VERSION=1.20.1
 EULA=TRUE
-TYPE=FABRIC
+TYPE=AUTO_CURSEFORGE
 
 # --- Memory ---
-MEMORY=3G
-USE_MEOWICE_FLAGS=false
+MEMORY=6G
+
+# --- Modpack ---
+CF_SLUG=cursed-walking-a-modern-zombie-apocalypse
 
 # --- World ---
-LEVEL=whymightacraft_season_001_v2
-SEED=1180506052330500839
-
-# --- Mods ---
-MODRINTH_PROJECTS=fabric-api,lithium,krypton,ferrite-core,scalablelux,spark
-REMOVE_OLD_MODS=true
-MODRINTH_DOWNLOAD_DEPENDENCIES=required
+LEVEL=cursedwalking_season_001
+SEED=
 
 # --- Server settings ---
 DIFFICULTY=normal
 MAX_PLAYERS=10
-VIEW_DISTANCE=10
-SIMULATION_DISTANCE=10
-MOTD=§dHit the Rollie store with the Rollie on
+VIEW_DISTANCE=8
+SIMULATION_DISTANCE=8
+MOTD=§cModded Survival Server
 SPAWN_PROTECTION=0
 PLAYER_IDLE_TIMEOUT=0
 
@@ -48,7 +44,7 @@ STOP_SERVER_ANNOUNCE_DELAY=30
 BACKUP_METHOD=tar
 
 RCON_HOST=minecraft
-EXCLUDES=cache,libraries,versions,logs,*.jar,gc-logs
+EXCLUDES=cache,libraries,versions,logs,*.jar,gc-logs,mods,config,kubejs
 
 BACKUP_INTERVAL=24h
 PRUNE_BACKUPS_DAYS=0

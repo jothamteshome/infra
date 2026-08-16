@@ -8,7 +8,7 @@ if [ -z "$LATEST" ]; then
 fi
 
 DATE=$(date +%Y-%m-%d)
-DEST="aws:$BACKUP_S3_BUCKET/vanilla/$LEVEL/$DATE.tgz"
+DEST="aws:$BACKUP_S3_BUCKET/$SERVER_TYPE/$LEVEL/$DATE.tgz"
 
 echo "[post-backup] Uploading $LATEST to $DEST"
 

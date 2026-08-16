@@ -30,6 +30,7 @@ services:
     environment:
       RCON_PASSWORD: ${RCON_PASSWORD}
       BACKUP_S3_BUCKET: ${BACKUP_S3_BUCKET}
+      SERVER_TYPE: ${SERVER_TYPE}
       POST_BACKUP_SCRIPT_FILE: /scripts/post-backup.sh
     volumes:
       - /opt/minecraft/server:/data:ro
