@@ -18,6 +18,10 @@ SERVER_MAP = {
         "instance_id": "i-0e15703301b836de9",
         "region": "us-east-2",
     },
+    "datapack.mc.whymighta.net": {
+        "instance_id": "i-0b2d59b3e90a056ef",
+        "region": "us-east-2",
+    },
 }
 
 # States where we can call start_instances
