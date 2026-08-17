@@ -11,7 +11,7 @@ STATUS_TIMEOUT = 3
 
 async def check_minecraft_server(hostname: str, port: str) -> dict:
     try:
-        server = JavaServer.lookup(f"{hostname}:{port}", timeout=STATUS_TIMEOUT)
+        server = JavaServer(hostname, int(port), timeout=STATUS_TIMEOUT)
         status = await server.async_status()
         return {
             "online": True,
