@@ -68,7 +68,7 @@ while true; do
         continue
     fi
 
-    players=$(echo "$player_output" | grep -oP '^\d+' || echo "0")
+    players=$(echo "$player_output" | grep -oP 'There are \K\d+' || echo "0")
 
     if [ "$players" -gt 0 ]; then
         log "Players online: $players — resetting idle count"
