@@ -1,6 +1,6 @@
 ## Minecraft Server Container
 # --- Server type + version ---
-VERSION=1.21.1
+VERSION=26.2
 FABRIC_LOADER_VERSION=0.19.3
 EULA=TRUE
 TYPE=FABRIC
@@ -19,7 +19,7 @@ SEED=
 # ScalableLux dropped - no 1.21.1 Fabric build
 # fast-path dropped - abandoned at 1.16
 # RPG Series deps pulled automatically via MODRINTH_DOWNLOAD_DEPENDENCIES=required
-MODRINTH_PROJECTS=fabric-api,lithium,krypton,ferrite-core,dynamic-torches,explorify,hearths,nice-mobs-remastered,vanilla-refresh,true-ending,dungeons-and-taverns,netherweather,neoenchant,tool-trims,infinity-cave:beta,svm-jojo,svm-powers
+MODRINTH_PROJECTS=fabric-api,lithium,krypton,ferrite-core,dynamic-torches,explorify,vanilla-refresh,dungeons-and-taverns,neoenchant,tool-trims,infinity-cave:beta,svm-powers,incendium,nullscape,emotecraft,ping-wheel,lgs-player-corpses
 REMOVE_OLD_MODS=true
 MODRINTH_DOWNLOAD_DEPENDENCIES=required
 
