@@ -10,8 +10,8 @@ MEMORY=6G
 USE_MEOWICE_FLAGS=false
 
 # --- World ---
-LEVEL=moddedcraft_season_001
-SEED=
+LEVEL=moddedcraft_season_002
+SEED=826365176
 
 # --- Mods + Datapacks (all via MODRINTH_PROJECTS) ---
 # DATAPACKS var dropped - it doesn't support modrinth: slugs, only direct zip URLs
