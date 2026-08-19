@@ -81,9 +81,28 @@ def handle_start(event: dict) -> dict:
     return response(200, start_instance_if_needed(server["instance_id"], server["region"], server["hostname"]))
 
 
+def handle_stop(event: dict) -> dict:
+    body = json.loads(event.get("body") or "{}")
+    name = body.get("server", "").lower()
+
+    if name not in SERVER_MAP:
+        return response(400, {"error": f"Unknown server. Valid options: {list(SERVER_MAP.keys())}"})
+
+    server = SERVER_MAP[name]
+    state = get_instance_state(server["instance_id"], server["region"])
+
+    if state == "running":
+        logger.info(f"Stopping instance {server['instance_id']} for {server['hostname']}")
+        boto3.client("ec2", region_name=server["region"]).stop_instances(InstanceIds=[server["instance_id"]])
+        return response(200, {"status": "stopping", "hostname": server["hostname"]})
+
+    return response(200, {"status": state, "hostname": server["hostname"]})
+
+
 ROUTES = {
     ("GET",  "/status"): handle_status,
     ("POST", "/start"):  handle_start,
+    ("POST", "/stop"): handle_stop
 }
 
 
