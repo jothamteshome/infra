@@ -103,6 +103,8 @@ export WHYMIGHTA_OPENAI_MODEL=$(aws ssm get-parameter --name "/whymighta/llm/ope
 export WHYMIGHTA_ANTHROPIC_MODEL=$(aws ssm get-parameter --name "/whymighta/llm/anthropic/model" --with-decryption --query "Parameter.Value" --output text --region us-east-1 2>/dev/null)
 export WHYMIGHTA_WEATHER_API_KEY=$(aws ssm get-parameter --name "/whymighta/api/weather/key" --with-decryption --query "Parameter.Value" --output text --region us-east-1 2>/dev/null)
 export WHYMIGHTA_DISCORD_TOKEN=$(aws ssm get-parameter --name "/whymighta/discord/token" --with-decryption --query "Parameter.Value" --output text --region us-east-1 2>/dev/null)
+export WHYMIGHTA_MINECRAFT_API_TOKEN=$(aws ssm get-parameter --name "/minecraft/api-secret" --with-decryption --query "Parameter.Value" --output text --region us-east-2 2>/dev/null)
+export WHYMIGHTA_MINECRAFT_API_URL=$(aws ssm get-parameter --name "/whymighta/api/minecraft/url" --with-decryption --query "Parameter.Value" --output text --region us-east-1 2>/dev/null)
 
 # watch-together
 echo "Fetching Watch Together environment variables from AWS SSM..."
