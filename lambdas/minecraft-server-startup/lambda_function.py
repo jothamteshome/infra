@@ -1,6 +1,8 @@
 import json
 import logging
 import boto3
+import functools
+
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -29,6 +31,15 @@ SERVER_MAP = {
 STARTABLE_STATES  = {"stopped"}
 ALREADY_STARTING  = {"pending", "running"}
 TRANSITIONAL_STATES = {"stopping", "shutting-down"}
+
+
+@functools.cache
+def get_api_secret() -> str:
+    ssm = boto3.client("ssm", region_name="us-east-2")
+    return ssm.get_parameter(
+        Name="/minecraft/api-secret",
+        WithDecryption=True
+    )["Parameter"]["Value"]
 
 
 def get_instance_state(instance_id: str, region: str) -> str:
@@ -107,6 +118,9 @@ ROUTES = {
 
 
 def lambda_handler(event: dict, context) -> dict:
+    if (event.get("headers") or {}).get("x-api-key") != get_api_secret():
+        return response(401, {"error": "Unauthorized"})
+    
     method = event.get("requestContext", {}).get("http", {}).get("method", "")
     path = event.get("rawPath", "")
 
