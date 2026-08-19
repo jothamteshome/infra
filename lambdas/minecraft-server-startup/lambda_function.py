@@ -82,7 +82,9 @@ def handle_status(event: dict) -> dict:
 
 
 def handle_start(event: dict) -> dict:
-    body = json.loads(event.get("body") or "{}")
+    raw_body = event.get("body")
+    logger.info(f"Raw body: {repr(raw_body)}")
+    body = json.loads(raw_body or "{}")
     name = body.get("server", "").lower()
 
     if name not in SERVER_MAP:
@@ -93,7 +95,9 @@ def handle_start(event: dict) -> dict:
 
 
 def handle_stop(event: dict) -> dict:
-    body = json.loads(event.get("body") or "{}")
+    raw_body = event.get("body")
+    logger.info(f"Raw body: {repr(raw_body)}")
+    body = json.loads(raw_body or "{}")
     name = body.get("server", "").lower()
 
     if name not in SERVER_MAP:
