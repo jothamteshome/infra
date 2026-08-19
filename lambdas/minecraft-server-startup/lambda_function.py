@@ -74,7 +74,11 @@ def start_instance_if_needed(instance_id: str, region: str, hostname: str) -> di
 
 
 def response(status_code: int, body: dict) -> dict:
-    return {"statusCode": status_code, "body": json.dumps(body)}
+    return {
+        "statusCode": status_code,
+        "headers": {"Content-Type": "application/json"},
+        "body": json.dumps(body),
+    }
 
 
 def handle_status(event: dict) -> dict:
